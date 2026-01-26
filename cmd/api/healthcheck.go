@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
 )
 
@@ -9,18 +9,29 @@ import (
 // app status, operating envt and version.
 func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Create a fixed-format JSON response from a string. Notice how we're using a raw
-	// string literal (enclosed with backticks) so that we can include double-quote
-	// characters in the JSON without needing to escape them? We also use the %q verb to
-	// wrap the interpolated values in double-quotes.
-	js := `{"status" : "available", "environment": %q, "version": %q}`
-	js = fmt.Sprintf(js, app.config.env, version)
+	// Create a map which holds the infn that we want to send in the response.
+	data := map[string]string{
+		"status":      "available",
+		"environment": app.config.env,
+		"version":     version,
+	}
 
-	// Set the "Content-Type: application/json" header on the response. If you forget to
-	// do this, Go will default to sending a "Content-Type: text/plain; charset=utf-8"
-	// header instead.
+	// pass the map to the jsno.Marshal() fun. This returns a []byte slice
+	// containing the encoded JSON. If there is an error, we log it and send the client
+	// a generic error message.
+	js, err := json.Marshal(data)
+	if err != nil {
+		app.logger.Error(err.Error())
+		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
+		return
+	}
+
+	// Append a newline to the JSON. This is just a small nicety to make it easier to
+	// view in terminal apps.
+	js = append(js, '\n')
+
 	w.Header().Set("Content-Type", "application/json")
 
-	// Write the JSON as the HTTP response body.
-	w.Write([]byte(js))
+	// Use w.Write to send the []byte slice containing the JSON as response body.
+	w.Write(js)
 }
