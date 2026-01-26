@@ -3,9 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strconv"
-
-	"github.com/julienschmidt/httprouter"
 )
 
 // Add a createMovieHandler for the "POST /v1/moview" endpoint. For now we simply
@@ -19,16 +16,8 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 // response.
 func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 
-	// When httprouter is parsing a request, any interpolated URL params will be
-	// stored in the request context. We can use the ParamsFromContext() fun to
-	// retrieve a slice containing these para names and values.
-	params := httprouter.ParamsFromContext(r.Context())
-
-	// We can then use the ByName method to get the value of the params
-	// from the slice. the value returned by ByName is always a string
-	// So we try to convert it to a base 10 integer (with a bit size of 64).
-	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
-	if err != nil || id < 1 {
+	id, err := app.readIDParam(r)
+	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
