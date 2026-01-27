@@ -107,6 +107,10 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 		// rather than returning an error to our handler.
 		case errors.As(err, &invalidUnmarshalError):
 			panic(err)
+			//  f we get a json.InvalidUnmarshalError at
+			// runtime it’s because we as the developers have passed an unsupported value to Decode().
+			// This is firmly an unexpected error which we shouldn’t see under normal operation, and is
+			// something that should be picked up in development and tests long before deployment.
 
 			// For anything else, return the error message as-is
 		default:
