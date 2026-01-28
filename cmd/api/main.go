@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/High-la/greenlight/internal/data"
 	_ "github.com/lib/pq"
 )
 
@@ -41,9 +42,11 @@ type config struct {
 // Define application struct to hold the dependencies for HTTP handlers, helpers,
 // and middleware.
 
+// Add a models field to hold our new Models struct.
 type application struct {
 	config config
 	logger *slog.Logger
+	models data.Models
 }
 
 func main() {
@@ -92,9 +95,13 @@ func main() {
 
 	// Declare an instance of the application struct, containing th econfig struct and
 	// the logger.
+
+	// Use the data.NewModels() function to initialize a Model struct, passing in the
+	// connection pool as a parameter.
 	app := &application{
 		config: cfg,
 		logger: logger,
+		models: data.NewModels(db),
 	}
 
 	// Use the httprouter instance returned by app.routes() as the server handler.
