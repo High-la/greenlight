@@ -237,8 +237,6 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
 
 	// To keep things consistent with other handlers, we'll define an input struct
 	// to hold the expected values from the request query string.
-
-	// Embed the new Filters struct
 	var input struct {
 		Title  string
 		Genres []string
@@ -260,16 +258,22 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
 	// Get the page and page_size query string values as integers. Notice that we set
 	// the default page value to 1 and default page_size to 20, and that we pass the
 	// validator instance as the final argument here.
-	input.Page = app.readInt(qs, "page", 1, v)
-	input.PageSize = app.readInt(qs, "page_size", 20, v)
+
+	// Read the page and page_size query string values into the embedded struct
+	input.Filters.Page = app.readInt(qs, "page", 1, v)
+	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
 
 	// Extract the sort query string value, falling back to "id" if it is not provided
 	// by the client (which will imply a ascending sort on movie ID).
-	input.Sort = app.readString(qs, "sort", "id")
 
-	// Check the Validator instance for any errors and use the failedValidationResponse()
-	// helper to send the client a response if necessary.
-	if !v.Valid() {
+	// Read the sort query string value into the embedded struct
+	input.Filters.Sort = app.readString(qs, "sort", "id")
+	// Add the supported sort values for this endpoint to the sort safelist
+	input.Filters.SortSafelist = []string{"id", "title", "year", "runtime", "-id", "-title", "-year", "-runtime"}
+
+	// Execute the validation checks on the Filters struct and send a response
+	// containing the errors if necessary.
+	if data.ValidateFilters(v, input.Filters); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
