@@ -10,6 +10,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	"github.com/High-la/greenlight/internal/data"
 	_ "github.com/lib/pq"
 )
@@ -51,6 +53,10 @@ type application struct {
 
 func main() {
 
+	// Initialize a new structured logger which writes log entries to the standard out
+	// stream.
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
 	// Declare an instance of the config struct
 	var cfg config
 
@@ -60,6 +66,20 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 	flag.Parse()
+
+	if os.Getenv("APP_ENV") != "production" {
+		env := os.Getenv("APP_ENV")
+		if env == "" {
+			env = "development"
+		}
+		envFileName := fmt.Sprintf(".env.%s", env)
+		fmt.Println(envFileName)
+		err := godotenv.Load(envFileName)
+		if err != nil {
+			logger.Error("Error loading .env file")
+			os.Exit(1)
+		}
+	}
 
 	// Use the value of the GREENLIGHT_DB_DSN environment var as the default value
 	// for our db-dsn command line flag.
@@ -72,10 +92,6 @@ func main() {
 	flag.DurationVar(&cfg.db.maxIdleTime, "db-max-idle-time", 15*time.Minute, "PostgreSQL max connection idle time")
 
 	flag.Parse()
-
-	// Initialize a new structured logger which writes log entries to the standard out
-	// stream.
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	// Call the openDB() helper function(see below) to create the connection pool,
 	// passing in the config struct. If this returns an error, we log it and exit the
