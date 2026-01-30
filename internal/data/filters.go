@@ -1,6 +1,10 @@
 package data
 
-import "github.com/High-la/greenlight/internal/validator"
+import (
+	"strings"
+
+	"github.com/High-la/greenlight/internal/validator"
+)
 
 // Add a SortSafelist field to hold the supported sort values.
 type Filters struct {
@@ -21,4 +25,30 @@ func ValidateFilters(v *validator.Validator, f Filters) {
 
 	// Check that the sort parameter matches a value in the safelist
 	v.Check(validator.PermittedValue(f.Sort, f.SortSafelist...), "sort", "invalid sort value")
+}
+
+// Check that the client provided Sort field matches one of the entries in our safelist
+// and if it does, extract the column name from the Sort field by stripping the leading
+// hyphen char (if one exists).
+func (f Filters) sortColumn() string {
+
+	for _, safeValue := range f.SortSafelist {
+
+		if f.Sort == safeValue {
+			return strings.TrimPrefix(f.Sort, "-")
+		}
+	}
+
+	panic("unsafe sort parameter: " + f.Sort)
+}
+
+// Return the sort direction ("ASC" or "DESC") depending on the prefix char of the
+// Sort field
+func (f Filters) sortDirection() string {
+
+	if strings.HasPrefix(f.Sort, "-") {
+		return "DESC"
+	}
+
+	return "ASC"
 }
