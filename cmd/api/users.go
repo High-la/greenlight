@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/High-la/greenlight/internal/data"
@@ -70,7 +71,33 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// Launch a goroutine which runs an anonymous function that sends the welcome email.
+	go func() {
+
+		// Run a deferred function which uses recover() to catch any panic, and log an
+		// error message instead of terminating the application.
+		defer func() {
+			if er := recover(); er != nil {
+				app.logger.Error(fmt.Sprintf("%v", er))
+			}
+		}()
+
+		// Call the Send() method on our Mailer, passing in the user's email address,
+		// name of the template file, and the User struct containing the new user's data.
+		err = app.mailer.Send(user.Email, "user_welcome.tmpl.html", user)
+		if err != nil {
+			// Importantly, if there is an error sending the email then we use the
+			// app.logger.Error() helper to manage it, instead of the
+			// app.serverErrorResponse() helper like before.
+			app.logger.Error(err.Error())
+		}
+	}()
+
 	// Write a JSON response containing the user data along with a 201 Created status code
+
+	// Note that we also change this to send the client a 202 Accepted status code.
+	// This status code indicates that the request has been accepted for processing, but
+	// the processing has not been completed.
 	err = app.writeJSON(w, http.StatusCreated, envelope{"user": user}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
