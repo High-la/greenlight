@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"expvar"
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 	"runtime"
@@ -16,11 +17,14 @@ import (
 
 	"github.com/high-la/greenlight/internal/data"
 	"github.com/high-la/greenlight/internal/mailer"
+	"github.com/high-la/greenlight/internal/vcs"
 	_ "github.com/lib/pq"
 )
 
-// application version number
-const version = "1.0.0"
+// Make version a variable (rather than a constant) and set its value to vcs.Version().
+var (
+	version = vcs.Version()
+)
 
 // Define a config struct to hold all configuration settings for the app
 // port number and
@@ -157,8 +161,18 @@ func main() {
 		return nil
 	})
 
+	// Create a new version boolean flag with the default value of false.
+	displayVersion := flag.Bool("version", false, "Display version and exit")
+
 	// 4. parse ONCE
 	flag.Parse()
+
+	// If the version flag value is true, then print out the version number and
+	// immediately exit.
+	if *displayVersion {
+		fmt.Printf("Version:\t%s\n", version)
+		os.Exit(0)
+	}
 
 	// Call the openDB() helper function(see below) to create the connection pool,
 	// passing in the config struct. If this returns an error, we log it and exit the
