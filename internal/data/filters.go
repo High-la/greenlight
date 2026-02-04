@@ -3,7 +3,7 @@ package data
 import (
 	"strings"
 
-	"github.com/High-la/greenlight/internal/validator"
+	"github.com/high-la/greenlight/internal/validator"
 )
 
 // Add a SortSafelist field to hold the supported sort values.

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/High-la/greenlight/internal/data"
-	"github.com/High-la/greenlight/internal/validator"
+	"github.com/high-la/greenlight/internal/data"
+	"github.com/high-la/greenlight/internal/validator"
 )
 
 // Add a createMovieHandler for the "POST /v1/moview" endpoint.

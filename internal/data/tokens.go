@@ -8,7 +8,7 @@ import (
 	"encoding/base32"
 	"time"
 
-	"github.com/High-la/greenlight/internal/validator"
+	"github.com/high-la/greenlight/internal/validator"
 )
 
 // Define constants for the token scope. For now we just define the scope "activation"
